@@ -1,0 +1,18 @@
+{
+  "personal": [
+    {
+      "username": "vasya",
+      "password": "mypass",
+      "bitrixId": "123",
+      "phoneIP": "192.168.1.1",
+      "phoneNum": "100"
+    },
+    {
+      "username": "petya",
+      "password": "pass",
+      "bitrixId": "2",
+      "phoneIP": "192.168.1.2",
+      "phoneNum": "111"
+    }
+  ]
+}

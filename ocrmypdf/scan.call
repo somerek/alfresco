@@ -1,0 +1,8 @@
+CallerID: Fax <125>
+MaxRetries: 1
+RetryTime: 45
+WaitTime: 30
+Context: scan-alert
+Extension: s
+Priority: 1
+AlwaysDelete: Yes

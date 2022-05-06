@@ -1,0 +1,7 @@
+/backup/*
+/initdb.d/*
+/ftp_acc/ftp_acc.ini
+/ftp_acc/users.json
+/ftp_acc/*@*
+.idea
+.env

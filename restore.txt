@@ -1,0 +1,29 @@
+docker-compose down
+
+# Specify the archive for db restore, unpack to ./initdb.d
+mkdir initdb.d
+gunzip -c ./backup/dump_2022-04-10-14-25.sql.gz > ./initdb.d/dump.sql
+
+# delete DB!!!!!!!!
+#docker volume rm alfresco_pgsql_data
+
+# Start up container restore_db
+docker-compose -f docker-compose_restore_db.yml up -d
+
+# Wait for restore db compleate
+docker logs -f restore_db
+# Press Ctrl+C
+
+# after restore db
+# Specify file for restore files
+docker exec -it restore_db sh -c "rm -rf /opt/alf_data/* ; tar -C / -xzvf /backup/alf_data_2022-....tar.gz"
+
+# Stop the container restore_db
+docker-compose -f docker-compose_restore_db.yml down
+
+# Remove files from initdb.d/ !!!
+rm ./initdb.d/dump.sql
+rmdir ./initdb.d
+
+# Start services with new data
+docker-compose up -d

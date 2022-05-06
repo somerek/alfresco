@@ -1,0 +1,147 @@
+version: '2'
+
+services:
+  alfresco:
+    #image: jeci/alfresco-platform:5.2.g
+    image: myalfresco-platform
+    build: 
+      context: myalfresco-platform
+    container_name: alfresco
+    environment:
+      CATALINA_OPTS: "-Xmx1G -XX:+UseConcMarkSweepGC"
+    depends_on:
+      - postgresql
+    networks:
+      - internal
+    ports:
+      #- "20:20"
+      - "2221:2221"
+      - "2300-2400:2300-2400"
+    volumes:
+      - "alf_logs:/usr/local/tomcat/logs/"
+      #- "alf_data:/opt/alf_data"
+      - /mnt/12TB/1:/backup:z
+      - /mnt/12TB/alfresco-data:/opt/alf_data:z
+    tmpfs:
+      - /tmp
+      - /usr/local/tomcat/temp/
+      - /usr/local/tomcat/work/
+
+  share:
+    image: jeci/alfresco-share:5.2.f
+    environment:
+      CATALINA_OPTS: "-Xmx1G -XX:+UseConcMarkSweepGC"
+    depends_on:
+      - alfresco
+    networks:
+      - internal
+    ports:
+      - "8090:8080"
+    volumes:
+      - "share_logs:/usr/local/tomcat/logs/"
+    tmpfs:
+      - /tmp
+      - /usr/local/tomcat/temp/
+      - /usr/local/tomcat/work/
+
+  solr:
+    image: jeci/alfresco-solr:5.2.g
+    environment:
+      CATALINA_OPTS: "-Xmx1G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:G1HeapRegionSize=8m -XX:MaxGCPauseMillis=200"
+    depends_on:
+      - alfresco
+    networks:
+      - internal
+    volumes:
+      - "solr_logs:/usr/local/tomcat/logs/"
+      - "solr_data:/opt/solr_data"
+    tmpfs:
+      - /tmp
+      - /usr/local/tomcat/temp/
+      - /usr/local/tomcat/work/
+
+  libreoffice:
+    image: jeci/alfresco-libreoffice:5.3.6
+    restart: always
+    networks:
+      - internal
+
+  postgresql:
+    image: postgres:9.4
+    container_name: alfresco-postgres
+    environment:
+      - POSTGRES_DB=alfresco
+      - POSTGRES_PASSWORD=alfresco
+      - POSTGRES_USER=alfresco
+    networks:
+      - internal
+    volumes:
+      - "pgsql_data:/var/lib/postgresql/data"
+  ocrmypdf:
+    container_name: OCRmyPDF
+    image: myocrmypdf
+    build: 
+      context: ocrmypdf
+    restart: always
+    networks:
+      - internal
+    environment:
+      - smtp_url
+      - bitrix_url
+      - OCR_LANGUAGES
+      - alfresco_admin
+      - alfresco_password
+    volumes:
+    - in:/input
+    - out:/output
+    - /home/roman/alfresco/ftp_acc:/ftp_acc:z
+  ftp:
+    container_name: ftp
+    image: myftp
+    build: 
+      context: ftp
+    environment:
+      PASV_ADDRESS: 192.168.3.6
+      PASV_MIN_PORT: 2100
+      PASV_MAX_PORT: 2150
+      LOCAL_UMASK: "0000"
+      FILE_OPEN_MODE: "0777"
+    restart: always
+    networks:
+      - internal
+    ports:
+      #- "2020:20"
+      - "2021:21"
+      - "2100-2150:2100-2150"
+    volumes:
+      - in:/home/vsftpd
+      - /home/roman/alfresco/ftp_acc:/ftp_acc:z
+  samba:
+    image: mysamba
+    container_name: samba
+    build: 
+      context: samba
+    network_mode: host
+    volumes:
+      #- "./samba_config:/data"
+      #- /mnt/12TB/share-folder:/ftp_acc:z
+      - /home/roman/alfresco/ftp_acc:/ftp_acc:z
+      #- in:/samba
+      - /mnt/12TB/share-folder:/samba
+    environment:
+      - "TZ=Europe/Moscow"
+      - "SAMBA_LOG_LEVEL=0"
+    restart: always
+
+volumes:
+  alf_logs:
+  #alf_data:
+  share_logs:
+  solr_logs:
+  solr_data:
+  pgsql_data:
+  in:
+  out:
+
+networks:
+  internal:

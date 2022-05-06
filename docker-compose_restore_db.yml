@@ -1,0 +1,18 @@
+version: '2'
+
+services:
+  restore_db:
+    image: postgres:9.4
+    container_name: restore_db
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=alfresco
+      - POSTGRES_USER=alfresco
+    volumes:
+      - "pgsql_data:/var/lib/postgresql/data"
+      - ./initdb.d:/docker-entrypoint-initdb.d:z
+      - /mnt/12TB/alfresco-data:/opt/alf_data
+      - /mnt/12TB/1:/backup:z
+volumes:
+  pgsql_data:
+  alf_data:
