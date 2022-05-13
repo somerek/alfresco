@@ -9,10 +9,8 @@ services:
       - POSTGRES_PASSWORD=alfresco
       - POSTGRES_USER=alfresco
     volumes:
-      - "pgsql_data:/var/lib/postgresql/data"
+      - "pgsql_backup_data:/var/lib/postgresql/data"
       - ./initdb.d:/docker-entrypoint-initdb.d:z
-      - /mnt/12TB/alfresco-data:/opt/alf_data
-      - /mnt/12TB/1:/backup:z
+      #- /mnt/12TB/alfresco-data:/opt/alf_data
 volumes:
-  pgsql_data:
-  alf_data:
+  pgsql_backup_data:

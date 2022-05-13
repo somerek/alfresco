@@ -1,11 +1,8 @@
-docker-compose down
-
 # Specify the archive for db restore, unpack to ./initdb.d
 mkdir initdb.d
-gunzip -c ./backup/dump_2022-04-10-14-25.sql.gz > ./initdb.d/dump.sql
-
-# delete DB!!!!!!!!
-#docker volume rm alfresco_pgsql_data
+su
+gunzip -c /mnt/12TB/rsnapshot_backup/daily.0/localhost/mnt/12TB/alfresco-data/dump_db.sql.gz > /home/roman/alfresco/initdb.d/dump.sql
+exit
 
 # Start up container restore_db
 docker-compose -f docker-compose_restore_db.yml up -d
@@ -14,16 +11,29 @@ docker-compose -f docker-compose_restore_db.yml up -d
 docker logs -f restore_db
 # Press Ctrl+C
 
-# after restore db
-# Specify file for restore files
-docker exec -it restore_db sh -c "rm -rf /opt/alf_data/* ; tar -C / -xzvf /backup/alf_data_2022-....tar.gz"
-
 # Stop the container restore_db
 docker-compose -f docker-compose_restore_db.yml down
 
 # Remove files from initdb.d/ !!!
-rm ./initdb.d/dump.sql
+rm -f ./initdb.d/dump.sql
 rmdir ./initdb.d
 
-# Start services with new data
+#Change path for alfresco-data in docker-compose-from-backup.yml
+
+#Start temp service. Attention! Основной сервис временно не будет работать!
+docker-compose -f docker-compose-from-backup.yml up -d
+
+#Go to http://alfresco:8091/share and search your files.
+
+# Start the original service
+docker-compose -f docker-compose-from-backup.yml down
 docker-compose up -d
+
+# After all do clean
+docker volume rm alfresco_alf_logs_tmp
+docker volume rm alfresco_share_logs_tmp
+docker volume rm alfresco_solr_logs_tmp
+docker volume rm alfresco_solr_data_tmp
+docker volume rm alfresco_pgsql_backup_data
+
+# If you want to restore backup to main service - clean original volume "docker volume rm alfresco_pgsql_data" and use pgsql_data in docker-compose_restore_db.yml 

@@ -12,15 +12,12 @@ services:
     depends_on:
       - postgresql
     networks:
-      - internal
+      - alf
     ports:
-      #- "20:20"
       - "2221:2221"
       - "2300-2400:2300-2400"
     volumes:
       - "alf_logs:/usr/local/tomcat/logs/"
-      #- "alf_data:/opt/alf_data"
-      - /mnt/12TB/1:/backup:z
       - /mnt/12TB/alfresco-data:/opt/alf_data:z
     tmpfs:
       - /tmp
@@ -34,7 +31,7 @@ services:
     depends_on:
       - alfresco
     networks:
-      - internal
+      - alf
     ports:
       - "8090:8080"
     volumes:
@@ -51,7 +48,7 @@ services:
     depends_on:
       - alfresco
     networks:
-      - internal
+      - alf
     volumes:
       - "solr_logs:/usr/local/tomcat/logs/"
       - "solr_data:/opt/solr_data"
@@ -64,7 +61,7 @@ services:
     image: jeci/alfresco-libreoffice:5.3.6
     restart: always
     networks:
-      - internal
+      - alf
 
   postgresql:
     image: postgres:9.4
@@ -74,7 +71,7 @@ services:
       - POSTGRES_PASSWORD=alfresco
       - POSTGRES_USER=alfresco
     networks:
-      - internal
+      - alf
     volumes:
       - "pgsql_data:/var/lib/postgresql/data"
   ocrmypdf:
@@ -84,7 +81,7 @@ services:
       context: ocrmypdf
     restart: always
     networks:
-      - internal
+      - alf
     environment:
       - smtp_url
       - bitrix_url
@@ -94,7 +91,7 @@ services:
     volumes:
     - in:/input
     - out:/output
-    - /home/roman/alfresco/ftp_acc:/ftp_acc:z
+    - /home/roman/alfresco/ftp_acc:/ftp_acc:ro
   ftp:
     container_name: ftp
     image: myftp
@@ -108,14 +105,14 @@ services:
       FILE_OPEN_MODE: "0777"
     restart: always
     networks:
-      - internal
+      - alf
     ports:
-      #- "2020:20"
-      - "2021:21"
+      - "21:21"
+      #- "2021:21"
       - "2100-2150:2100-2150"
     volumes:
       - in:/home/vsftpd
-      - /home/roman/alfresco/ftp_acc:/ftp_acc:z
+      - /home/roman/alfresco/ftp_acc:/ftp_acc:ro
   samba:
     image: mysamba
     container_name: samba
@@ -123,11 +120,9 @@ services:
       context: samba
     network_mode: host
     volumes:
-      #- "./samba_config:/data"
-      #- /mnt/12TB/share-folder:/ftp_acc:z
-      - /home/roman/alfresco/ftp_acc:/ftp_acc:z
-      #- in:/samba
-      - /mnt/12TB/share-folder:/samba
+      - /home/roman/alfresco/ftp_acc:/ftp_acc:ro
+      - in:/samba
+      - /mnt/12TB/share-folder/bludov_av:/samba2
     environment:
       - "TZ=Europe/Moscow"
       - "SAMBA_LOG_LEVEL=0"
@@ -135,7 +130,6 @@ services:
 
 volumes:
   alf_logs:
-  #alf_data:
   share_logs:
   solr_logs:
   solr_data:
@@ -144,4 +138,10 @@ volumes:
   out:
 
 networks:
-  internal:
+  alf:
+    name: alfresco-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.33.0/24
+          gateway: 192.168.33.1

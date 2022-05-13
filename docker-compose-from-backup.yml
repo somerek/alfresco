@@ -1,0 +1,88 @@
+version: '2'
+
+services:
+  alfresco:
+    image: myalfresco-platform
+    build: 
+      context: myalfresco-platform
+    container_name: alfresco
+    environment:
+      CATALINA_OPTS: "-Xmx1G -XX:+UseConcMarkSweepGC"
+    depends_on:
+      - postgresql
+    networks:
+      - alf_tmp
+    volumes:
+      - "alf_logs_tmp:/usr/local/tomcat/logs/"
+      - /mnt/12TB/rsnapshot_backup/daily.0/localhost/mnt/12TB/alfresco-data:/opt/alf_data:z
+    tmpfs:
+      - /tmp
+      - /usr/local/tomcat/temp/
+      - /usr/local/tomcat/work/
+
+  share:
+    image: jeci/alfresco-share:5.2.f
+    environment:
+      CATALINA_OPTS: "-Xmx1G -XX:+UseConcMarkSweepGC"
+    depends_on:
+      - alfresco
+    networks:
+      - alf_tmp
+    ports:
+      - "8091:8080"
+    volumes:
+      - "share_logs_tmp:/usr/local/tomcat/logs/"
+    tmpfs:
+      - /tmp
+      - /usr/local/tomcat/temp/
+      - /usr/local/tomcat/work/
+
+  solr:
+    image: jeci/alfresco-solr:5.2.g
+    environment:
+      CATALINA_OPTS: "-Xmx1G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:G1HeapRegionSize=8m -XX:MaxGCPauseMillis=200"
+    depends_on:
+      - alfresco
+    networks:
+      - alf_tmp
+    volumes:
+      - "solr_logs_tmp:/usr/local/tomcat/logs/"
+      - "solr_data_tmp:/opt/solr_data"
+    tmpfs:
+      - /tmp
+      - /usr/local/tomcat/temp/
+      - /usr/local/tomcat/work/
+
+  libreoffice:
+    image: jeci/alfresco-libreoffice:5.3.6
+    restart: always
+    networks:
+      - alf_tmp
+
+  postgresql:
+    image: postgres:9.4
+    container_name: alfresco-postgres
+    environment:
+      - POSTGRES_DB=alfresco
+      - POSTGRES_PASSWORD=alfresco
+      - POSTGRES_USER=alfresco
+    networks:
+      - alf_tmp
+    volumes:
+      - "pgsql_backup_data:/var/lib/postgresql/data"
+
+volumes:
+  alf_logs_tmp:
+  share_logs_tmp:
+  solr_logs_tmp:
+  solr_data_tmp:
+  pgsql_backup_data:
+
+networks:
+  alf_tmp:
+    name: alfresco-network-tmp
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.34.0/24
+          gateway: 192.168.34.1

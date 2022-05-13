@@ -16,7 +16,11 @@ echo "share:" >> $config_file
 jq -c '.personal | .[]' /ftp_acc/users.json | while read i; do
     username=`echo $i | jq '.username'| sed 's/^"\(.*\)"$/\1/'`
     echo "  - name: $username" >> $config_file
-    echo "    path: /samba/$username" >> $config_file
+    if [ "$username" == "bludov_av" ]; then
+      echo "    path: /samba2" >> $config_file
+    else
+      echo "    path: /samba/$username" >> $config_file
+    fi
     echo "    browsable: yes" >> $config_file
     echo "    readonly: no" >> $config_file
     echo "    guestok: no" >> $config_file
