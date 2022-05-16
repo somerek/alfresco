@@ -1,8 +1,7 @@
 FROM cmccambridge/ocrmypdf-auto
-RUN apt update && apt install --no-install-recommends -y tesseract-ocr-rus curl iputils-ping ssh sudo mutt ncftp && \
+RUN apt-get update && apt-get install --no-install-recommends -y tesseract-ocr-rus curl iputils-ping ssh sudo mutt ncftp libsasl2-modules && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
-#RUN groupadd ftp && usermod -a -G ftp docker
-RUN echo "docker ALL=(ALL) NOPASSWD:ALL" >>  /etc/sudoers
+RUN echo "docker ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 WORKDIR /app
 COPY ocrmypdf-auto.py .
 COPY scan.call .

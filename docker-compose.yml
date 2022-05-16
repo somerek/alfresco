@@ -108,7 +108,6 @@ services:
       - alf
     ports:
       - "21:21"
-      #- "2021:21"
       - "2100-2150:2100-2150"
     volumes:
       - in:/home/vsftpd
